@@ -1,4 +1,6 @@
 build/
+sysroot_deps/
+wl_display_toggle
 
 # Prerequisites
 *.d

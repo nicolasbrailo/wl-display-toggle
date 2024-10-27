@@ -8,8 +8,8 @@ clean:
 	rm -f ./wl_display_toggle
 
 XCOMPILE=-target arm-linux-gnueabihf \
-				 -mcpu=arm1176jzf-s \
-				 --sysroot ~/src/xcomp-rpiz-env/mnt/ 
+	 -mcpu=arm1176jzf-s \
+	 --sysroot ~/src/xcomp-rpiz-env/mnt/ 
 CFLAGS=-Wall -Werror -Wextra \
        -Wundef \
        -Wmissing-include-dirs \
@@ -30,13 +30,20 @@ wl_protos/wlr-output-management-unstable-v1.xml:
 		https://gitlab.freedesktop.org/wlroots/wlr-protocols/-/raw/2b8d43325b7012cc3f9b55c08d26e50e42beac7d/unstable/wlr-output-management-unstable-v1.xml?inline=false
 
 # Build glue from wl protocol xml
-build/wl_protos/%.c build/wl_protos/%.h: wl_protos/%.xml
+build/wl_protos/%.h: wl_protos/%.xml
+	mkdir -p  build/wl_protos
+	wayland-scanner client-header < $< > $@
+build/wl_protos/%.c: wl_protos/%.xml
 	mkdir -p  build/wl_protos
 	wayland-scanner private-code < $< > $@
-	wayland-scanner client-header < $< > $(patsubst %.c,%.h,$@)
 
-build build/wl_protos:
-	mkdir -p build/wl_protos
+build/wl_protos/%.o: build/wl_protos/%.c build/wl_protos/%.h
+	mkdir -p build
+	@if [ ! -d ~/src/xcomp-rpiz-env/mnt/lib/raspberrypi-sys-mods ]; then \
+		echo "xcompiler sysroot not detected, try `make xcompile-start`"; \
+		@exit 1; \
+	fi ;
+	clang $(XCOMPILE) $(CFLAGS) -isystem ./build $< -c -o $@
 
 build/%.o: %.c %.h
 	mkdir -p build
@@ -86,4 +93,19 @@ xcompile-end:
 
 deploytgt: wl_display_toggle
 	scp ./wl_display_toggle batman@10.0.0.146:/home/batman/wl_display_toggle 
+
+# Build sysroot deps
+sysroot_deps/libwayland-dev_1.23.0-1_armhf.deb:
+	mkdir -p sysroot_deps
+	wget --directory-prefix="sysroot_deps" http://ftp.uk.debian.org/debian/pool/main/w/wayland/libwayland-dev_1.23.0-1_armhf.deb
+
+sysroot_deps/libwayland-dev_1.23.0-1_armhf: sysroot_deps/libwayland-dev_1.23.0-1_armhf.deb
+	mkdir -p ./sysroot_deps/libwayland-dev_1.23.0-1_armhf
+	dpkg-deb -R ./sysroot_deps/libwayland-dev_1.23.0-1_armhf.deb ./sysroot_deps/libwayland-dev_1.23.0-1_armhf
+
+.PHONY: install_sysroot_deps
+install_sysroot_deps: sysroot_deps/libwayland-dev_1.23.0-1_armhf
+	sudo cp -r sysroot_deps/libwayland-dev_1.23.0-1_armhf/usr/include/* ~/src/xcomp-rpiz-env/mnt/usr/include/
+	sudo cp -r sysroot_deps/libwayland-dev_1.23.0-1_armhf/usr/lib/* ~/src/xcomp-rpiz-env/mnt/usr/lib/
+	sudo cp -r sysroot_deps/libwayland-dev_1.23.0-1_armhf/usr/share/* ~/src/xcomp-rpiz-env/mnt/usr/share/
 
