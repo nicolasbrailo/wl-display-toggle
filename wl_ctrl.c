@@ -209,7 +209,7 @@ struct wl_ctrl *wl_ctrl_init(const char *interesting_screen) {
     return NULL;
   }
 
-  bzero(state, sizeof(struct wl_ctrl));
+  memset(state, 0, sizeof(struct wl_ctrl));
   state->running = true;
 
   if (interesting_screen) {
