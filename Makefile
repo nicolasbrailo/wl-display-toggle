@@ -102,5 +102,5 @@ xcompile-end:
 	./rpiz-xcompile/umount_rpy_root.sh ~/src/xcomp-rpiz-env
 
 install_sysroot_deps:
-	./rpiz-xcompile/add_sysroot_pkg.sh ~/src/xcomp-rpiz-env https://archive.raspberrypi.org/debian/pool/main/w/wayland/libwayland-dev_1.22.0-2.1~bpo12+rpt1_armhf.deb
+	./rpiz-xcompile/add_sysroot_pkg.sh ~/src/xcomp-rpiz-env http://archive.raspberrypi.com/debian/pool/main/w/wayland/libwayland-dev_1.22.0-2.1~bpo12+rpt1_armhf.deb
 
