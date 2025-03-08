@@ -1,6 +1,6 @@
 build/
 sysroot_deps/
-wl_display_toggle
+wl-display-toggle
 
 # Prerequisites
 *.d

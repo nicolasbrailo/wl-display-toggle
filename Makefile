@@ -1,24 +1,10 @@
 .PHONY: all deploytgt run clean format formatall
 
-all: wl_display_toggle
-
-deploytgt: wl_display_toggle
-	scp ./wl_display_toggle batman@10.0.0.146:/home/batman/picframe/wl_display_toggle 
-
-
-run: wl_display_toggle
-	./wl_display_toggle on
+all: wl-display-toggle
 
 clean:
 	rm -rf build
-	rm -f ./wl_display_toggle
-
-format:
-	git clang-format
-
-formatall:
-	ls *.c | xargs clang-format -i
-	ls *.h | xargs clang-format -i
+	rm -f ./wl-display-toggle
 
 # System tests
 .PHONY: system-deps screenoff screenon
@@ -30,11 +16,11 @@ screenon:
 system-deps:
 	sudo apt-get install clang-format
 	# wayland headers
-	#sudo apt-get install libwayland-dev
+	sudo apt-get install libwayland-dev
 	# wlroots protocol files, needed for wlr-output-power-management-unstable-v1.xml
-	#sudo apt-get install libwlroots-dev
+	sudo apt-get install libwlroots-dev
 	# Install protocols.xml into /usr/share/wayland-protocols, not sure if needed
-	#sudo apt-get install wayland-protocols
+	sudo apt-get install wayland-protocols
 
 
 XCOMPILE=\
@@ -44,18 +30,28 @@ XCOMPILE=\
 
 CFLAGS=\
 	$(XCOMPILE) \
-	-Wall -Werror -Wextra \
-  -Wundef \
-  -Wmissing-include-dirs \
-  -Wpointer-arith \
-  -Winit-self \
-  -Wfloat-equal \
-  -Wredundant-decls \
-  -Wimplicit-fallthrough \
-  -Wendif-labels \
-  -Wstrict-aliasing=2 \
-  -Woverflow \
-  -Wformat=2
+	-fdiagnostics-color=always \
+	-ffunction-sections -fdata-sections \
+	-ggdb -O3 \
+	-std=gnu99 \
+	-Wall -Werror -Wextra -Wpedantic \
+	-Wendif-labels \
+	-Wfloat-equal \
+	-Wformat=2 \
+	-Wimplicit-fallthrough \
+	-Winit-self \
+	-Winvalid-pch \
+	-Wmissing-field-initializers \
+	-Wmissing-include-dirs \
+	-Wno-strict-prototypes \
+	-Wno-unused-function \
+	-Wno-unused-parameter \
+	-Woverflow \
+	-Wpointer-arith \
+	-Wredundant-decls \
+	-Wstrict-aliasing=2 \
+	-Wundef \
+	-Wuninitialized \
 
 # Download wl protocol definitions
 wl_protos/wlr-output-management-unstable-v1.xml:
@@ -87,7 +83,7 @@ build/%.o: %.c %.h
 	fi ;
 	clang $(CFLAGS) -isystem ./build $< -c -o $@
 
-wl_display_toggle: build/wl_protos/wlr-output-management-unstable-v1.o \
+wl-display-toggle: build/wl_protos/wlr-output-management-unstable-v1.o \
 			build/wl_ctrl.o \
 			wl_display_toggle.c
 	clang $(CFLAGS) $^ -o $@ -lwayland-client
